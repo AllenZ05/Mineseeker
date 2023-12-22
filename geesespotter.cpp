@@ -21,26 +21,23 @@ void print_board(char *board, std::size_t x_dim, std::size_t y_dim) {
   std::cout << std::endl;
   for (std::size_t y{}; y < y_dim; ++y) {
     for (std::size_t x{}; x < x_dim; ++x) {
-      std::size_t i{y * x_dim + x}; // index
+      // index
+      std::size_t i{y * x_dim + x};
+      // if hidden
       if (board[i] & 0x20) {
-        // if hidden
-        if (board[i] & 0x10) {
-          // if marked
-          std::cout << "M";
-        } else {
-          // not marked
-          std::cout << "*";
-        }
-      } else {
+        // if marked
+        std::cout << ((board[i] & 0x10) ? 'M' : '*');
         // if revealed
-        int value = board[i]; // cast char to int
+      } else {
+        // mask to get value
+        int value = board[i] & 0xF;
         std::cout << value;
       }
     }
     std::cout << std::endl;
   }
   std::cout << std::endl;
-};
+}
 
 // Hide all the field values
 void hide_board(char *board, std::size_t x_dim, std::size_t y_dim) {
@@ -65,44 +62,55 @@ int mark(char *board, std::size_t x_dim, std::size_t y_dim, std::size_t x_loc, s
 
 // Updates the board array: all fields without a goose have their value set to the number of adjacent geese
 void compute_neighbours(char *board, std::size_t x_dim, std::size_t y_dim) {
-  int neighbours{};
-  for (std::size_t y{}; y < y_dim; ++y) {
-    for (std::size_t x{}; x < x_dim; ++x) {
-      std::size_t i{y * x_dim + x}; // index
+  for (std::size_t y = 0; y < y_dim; ++y) {
+    for (std::size_t x = 0; x < x_dim; ++x) {
+      std::size_t i = y * x_dim + x; // index
+
       if (board[i] == 9) {
-        neighbours = 9;
-      } else {
-        // check adjacent fields for geese
-        if (board[i - 1] == 9 && x > 0) { // check left
-          neighbours++;
-        }
-        if (board[i + 1] == 9 && x < x_dim - 1) { // check right
-          neighbours++;
-        }
-        if (board[i - x_dim] == 9 && y > 0) { // check up
-          neighbours++;
-        }
-        if (board[i + x_dim] == 9 && y < y_dim - 1) { // check bottom
-          neighbours++;
-        }
-        if (board[i - x_dim - 1] == 9 && x > 0 && y > 0) { // check top-left
-          neighbours++;
-        }
-        if (board[i - x_dim + 1] == 9 && x < x_dim - 1 && y > 0) { // check top-right
-          neighbours++;
-        }
-        if (board[i + x_dim - 1] == 9 && x > 0 && y < y_dim - 1) { // check bottom-left
-          neighbours++;
-        }
-        if (board[i + x_dim + 1] == 9 && x < x_dim - 1 && y < y_dim - 1) { // check bottom-right
-          neighbours++;
-        }
+        // No need to compute neighbours for a goose
+        continue;
       }
+
+      int neighbours = 0;
+
+      // Check left
+      if (x > 0 && board[i - 1] == 9) {
+        neighbours++;
+      }
+      // Check right
+      if (x < x_dim - 1 && board[i + 1] == 9) {
+        neighbours++;
+      }
+      // Check up
+      if (y > 0 && board[i - x_dim] == 9) {
+        neighbours++;
+      }
+      // Check down
+      if (y < y_dim - 1 && board[i + x_dim] == 9) {
+        neighbours++;
+      }
+      // Check top-left
+      if (x > 0 && y > 0 && board[i - x_dim - 1] == 9) {
+        neighbours++;
+      }
+      // Check top-right
+      if (x < x_dim - 1 && y > 0 && board[i - x_dim + 1] == 9) {
+        neighbours++;
+      }
+      // Check bottom-left
+      if (x > 0 && y < y_dim - 1 && board[i + x_dim - 1] == 9) {
+        neighbours++;
+      }
+      // Check bottom-right
+      if (x < x_dim - 1 && y < y_dim - 1 && board[i + x_dim + 1] == 9) {
+        neighbours++;
+      }
+
+      // Assign the computed number of neighbours
       board[i] = neighbours;
-      neighbours = 0; // reset neighbours
     }
   }
-};
+}
 
 // The game is won when all fields that do not have a goose have been revealed
 bool is_game_won(char *board, std::size_t x_dim, std::size_t y_dim) {
@@ -126,37 +134,25 @@ int reveal(char *board, std::size_t x_dim, std::size_t y_dim, std::size_t x_loc,
     // reveal field
     board[i] ^= 0x20;
     if (board[i] == 9) {
-      return 9;
+      return 9; // goose found
     } else if (board[i] == 0) {
-      // reveal adjacent fields if it is not marked, and if it is hidden
-      if ((!(board[i - 1] & 0x10)) && (board[i - 1] & 0x20) && x_loc > 0) { // check left
-        board[i - 1] ^= 0x20;
-      }
-      if ((!(board[i + 1] & 0x10)) && (board[i + 1] & 0x20) && x_loc < x_dim - 1) { // check right
-        board[i + 1] ^= 0x20;
-      }
-      if ((!(board[i - x_dim] & 0x10)) && (board[i - x_dim] & 0x20) && y_loc > 0) { // check up
-        board[i - x_dim] ^= 0x20;
-      }
-      if ((!(board[i + x_dim] & 0x10)) && (board[i + x_dim] & 0x20) && y_loc < y_dim - 1) { // check bottom
-        board[i + x_dim] ^= 0x20;
-      }
-      if ((!(board[i - x_dim - 1] & 0x10)) && (board[i - x_dim - 1] & 0x20) && x_loc > 0 &&
-          y_loc > 0) { // check top-left
-        board[i - x_dim - 1] ^= 0x20;
-      }
-      if ((!(board[i - x_dim + 1] & 0x10)) && (board[i - x_dim + 1] & 0x20) && x_loc < x_dim - 1 &&
-          y_loc > 0) { // check top-right
-        board[i - x_dim + 1] ^= 0x20;
-      }
-      if ((!(board[i + x_dim - 1] & 0x10)) && (board[i + x_dim - 1] & 0x20) && x_loc > 0 &&
-          y_loc < y_dim - 1) { // check bottom-left
-        board[i + x_dim - 1] ^= 0x20;
-      }
-      if ((!(board[i + x_dim + 1] & 0x10)) && (board[i + x_dim + 1] & 0x20) && x_loc < x_dim - 1 &&
-          y_loc < y_dim - 1) { // check bottom-right
-        board[i + x_dim + 1] ^= 0x20;
-      }
+      // Recursively reveal adjacent fields
+      if (x_loc > 0)
+        reveal(board, x_dim, y_dim, x_loc - 1, y_loc); // left
+      if (x_loc < x_dim - 1)
+        reveal(board, x_dim, y_dim, x_loc + 1, y_loc); // right
+      if (y_loc > 0)
+        reveal(board, x_dim, y_dim, x_loc, y_loc - 1); // up
+      if (y_loc < y_dim - 1)
+        reveal(board, x_dim, y_dim, x_loc, y_loc + 1); // down
+      if (x_loc > 0 && y_loc > 0)
+        reveal(board, x_dim, y_dim, x_loc - 1, y_loc - 1); // top-left
+      if (x_loc < x_dim - 1 && y_loc > 0)
+        reveal(board, x_dim, y_dim, x_loc + 1, y_loc - 1); // top-right
+      if (x_loc > 0 && y_loc < y_dim - 1)
+        reveal(board, x_dim, y_dim, x_loc - 1, y_loc + 1); // bottom-left
+      if (x_loc < x_dim - 1 && y_loc < y_dim - 1)
+        reveal(board, x_dim, y_dim, x_loc + 1, y_loc + 1); // bottom-right
     }
   } else if (board[i] & 0x10) { // if marked
     return 1;
@@ -164,4 +160,4 @@ int reveal(char *board, std::size_t x_dim, std::size_t y_dim, std::size_t x_loc,
     return 2;
   }
   return 0;
-};
+}
