@@ -1,102 +1,109 @@
 #include "geesespotter_lib.h"
 #include "geesespotter.h"
 #include <cctype>
-#include <ctime> // for time(NULL)
+#include <ctime>
 #include <iostream>
+#include <limits>
+#include <random>
+#include <string>
 
 int main() {
-  srand(time(NULL));
-  game();
+  std::srand(static_cast<unsigned int>(std::time(nullptr)));
+  if (!game()) {
+    std::cerr << "An error occurred during the game." << std::endl;
+  }
   return 0;
 }
-// main game function
+
 bool game() {
-  std::size_t x_dim{0};
-  std::size_t y_dim{0};
-
+  std::size_t x_dim{0}, y_dim{0};
   unsigned int num_geese{0};
-  char *game_Board{NULL};
+  char *game_board = nullptr;
 
-  start_game(game_Board, x_dim, y_dim, num_geese);
-
-  char curr_action{0};
-  while (curr_action != 'Q') {
-    switch (curr_action) {
-    case 'S': // show
-    {
-      action_show(game_Board, x_dim, y_dim, num_geese);
-      break;
-    }
-    case 'M': // mark
-    {
-      action_mark(game_Board, x_dim, y_dim);
-      break;
-    }
-    case 'R': // restart
-    {
-      std::cout << "Restarting the game." << std::endl;
-      start_game(game_Board, x_dim, y_dim, num_geese);
-      break;
-    }
-    }
-    print_board(game_Board, x_dim, y_dim);
-
-    if (is_game_won(game_Board, x_dim, y_dim)) {
-      std::cout
-          << "You have revealed all the fields without disturbing a goose!"
-          << std::endl;
-      std::cout << "YOU WON!!!" << std::endl;
-
-      for (std::size_t reveal_row{0}; reveal_row < y_dim; reveal_row++) {
-        for (std::size_t reveal_col{0}; reveal_col < x_dim; reveal_col++) {
-          game_Board[reveal_row * x_dim + reveal_col] =
-              (game_Board[reveal_row * x_dim + reveal_col] & value_mask());
-        }
-      }
-
-      print_board(game_Board, x_dim, y_dim);
-      std::cout << "Resetting the game board." << std::endl;
-      start_game(game_Board, x_dim, y_dim, num_geese);
-      print_board(game_Board, x_dim, y_dim);
-    }
-
-    curr_action = get_action();
+  if (!start_game(game_board, x_dim, y_dim, num_geese)) {
+    return false;
   }
 
-  clean_board(game_Board);
+  char curr_action{0};
+  while ((curr_action = get_action()) != 'Q') {
+    switch (curr_action) {
+    case 'S':
+      action_show(game_board, x_dim, y_dim, num_geese);
+      break;
+    case 'M':
+      action_mark(game_board, x_dim, y_dim);
+      break;
+    case 'R':
+      std::cout << "Restarting the game." << std::endl;
+      if (!start_game(game_board, x_dim, y_dim, num_geese)) {
+        return false;
+      }
+      break;
+    }
+    print_board(game_board, x_dim, y_dim);
+
+    if (is_game_won(game_board, x_dim, y_dim)) {
+      std::cout << "Congratulations! You won!" << std::endl;
+      if (!start_game(game_board, x_dim, y_dim, num_geese)) {
+        return false;
+      }
+    }
+  }
+
+  clean_board(game_board);
   return true;
 }
 
-// gets initial conditions of the board
-void start_game(char *&board, std::size_t &x_dim, std::size_t &y_dim,unsigned int &num_geese) {
-  std::cout << "-------------------------------------------" << std::endl;
-  std::cout << "Welcome to GeeseSpotter!" << std::endl;
-  do {
-    std::cout << "Please enter the x dimension (max " << x_dim_max() << "): ";
-    std::cin >> x_dim;
-  } while (x_dim < 1 || x_dim > x_dim_max());
+bool start_game(char *&board, std::size_t &x_dim, std::size_t &y_dim, unsigned int &num_geese) {
+  std::cout << "-------------------------------------------\n";
+  std::cout << "Welcome to GeeseSpotter!\n";
+  x_dim = get_dimension_input("x");
+  y_dim = get_dimension_input("y");
 
-  do {
-    std::cout << "Please enter the y dimension (max " << y_dim_max() << "): ";
-    std::cin >> y_dim;
-  } while (y_dim < 1 || y_dim > y_dim_max());
+  num_geese = get_geese_input(x_dim, y_dim);
 
-  std::cout << "Please enter the number of geese: ";
-  std::cin >> num_geese;
-  while (num_geese > x_dim * y_dim) {
-    std::cout << "That's too many geese!" << std::endl;
-    std::cout << "Please enter the number of geese: ";
-    std::cin >> num_geese;
-  }
-
-  // calls functions to create the board
-  clean_board(board);
+  clean_board(board); // Safe to call on nullptr
   board = create_board(x_dim, y_dim);
   spread_geese(board, x_dim, y_dim, num_geese);
   compute_neighbours(board, x_dim, y_dim);
   hide_board(board, x_dim, y_dim);
 
-  return;
+  return true;
+}
+
+std::size_t get_dimension_input(const std::string &dimension_name) {
+  std::size_t dimension = 0;
+  while (true) {
+    std::cout << "Please enter the " << dimension_name << " dimension (max " << ((dimension_name == "x") ? x_dim_max() : y_dim_max())
+              << "): ";
+    std::cin >> dimension;
+
+    if (std::cin.fail() || dimension < 1 || dimension > ((dimension_name == "x") ? x_dim_max() : y_dim_max())) {
+      std::cin.clear();
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      std::cerr << "Invalid input. Please enter a number between 1 and " << ((dimension_name == "x") ? x_dim_max() : y_dim_max()) << ".\n";
+    } else {
+      break;
+    }
+  }
+  return dimension;
+}
+
+unsigned int get_geese_input(std::size_t x_dim, std::size_t y_dim) {
+  unsigned int num_geese = 0;
+  while (true) {
+    std::cout << "Please enter the number of geese: ";
+    std::cin >> num_geese;
+
+    if (std::cin.fail() || num_geese > x_dim * y_dim) {
+      std::cin.clear();
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      std::cerr << "Invalid input. Please enter a valid number of geese.\n";
+    } else {
+      break;
+    }
+  }
+  return num_geese;
 }
 
 char get_action() {
@@ -105,14 +112,14 @@ char get_action() {
   std::cout << "Please enter the action ([S]how, [M]ark, [R]estart, [Q]uit): ";
   std::cin >> action;
 
-  if (islower(action))
+  if (islower(action)) {
     action = toupper(action);
+  }
 
   return action;
 }
 
-void action_show(char *&board, std::size_t &x_dim, std::size_t &y_dim,
-                 unsigned int &num_geese) {
+void action_show(char *&board, std::size_t &x_dim, std::size_t &y_dim, unsigned int &num_geese) {
   std::size_t x_reveal{0};
   std::size_t y_reveal{0};
   std::cout << "Please enter the x location to show: ";
@@ -123,8 +130,7 @@ void action_show(char *&board, std::size_t &x_dim, std::size_t &y_dim,
   if (x_reveal >= x_dim || y_reveal >= y_dim) {
     std::cout << "Location entered is not on the board." << std::endl;
   } else if (board[x_dim * y_reveal + x_reveal] & marked_mask()) {
-    std::cout << "Location is marked, and therefore cannot be revealed."
-              << std::endl;
+    std::cout << "Location is marked, and therefore cannot be revealed." << std::endl;
     std::cout << "Use Mark on location to unmark." << std::endl;
   } else if (reveal(board, x_dim, y_dim, x_reveal, y_reveal) == 9) {
     std::cout << "You disturbed a goose! Your game has ended." << std::endl;
@@ -162,15 +168,16 @@ char hidden_mask() { return 0x20; }
 
 char value_mask() { return 0x0F; }
 
-void spread_geese(char *board, std::size_t x_dim, std::size_t y_dim,
-                  unsigned int num_geese) {
-  if (board != NULL) {
-    for (unsigned int gen_goose{0}; gen_goose < num_geese; gen_goose++) {
-      std::size_t try_position{0};
+void spread_geese(char *board, std::size_t x_dim, std::size_t y_dim, unsigned int num_geese) {
+  if (board != nullptr) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, x_dim * y_dim - 1);
+    for (unsigned int gen_goose = 0; gen_goose < num_geese; ++gen_goose) {
+      std::size_t try_position = 0;
       do {
-        try_position = rand() % (x_dim * y_dim);
+        try_position = dis(gen);
       } while (board[try_position] != 0);
-
       board[try_position] = 9;
     }
   }

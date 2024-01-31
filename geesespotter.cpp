@@ -1,36 +1,46 @@
 #include "geesespotter_lib.h"
 #include <iostream>
+#include <stdexcept>
 
-// Create the board
+// Create the board and initialize it
 char *create_board(std::size_t x_dim, std::size_t y_dim) {
-  char *p_board = new char[x_dim * y_dim]{};
-  for (std::size_t i{}; i < x_dim * y_dim; ++i) {
+  if (x_dim == 0 || y_dim == 0) {
+    throw std::invalid_argument("Board dimensions must be greater than 0");
+  }
+
+  char *p_board = new (std::nothrow) char[x_dim * y_dim]{};
+  if (p_board == nullptr) {
+    throw std::bad_alloc();
+  }
+
+  for (std::size_t i = 0; i < x_dim * y_dim; ++i) {
     p_board[i] = '\0';
   }
   return p_board;
-};
+}
 
-// Deallocate the given board
-void clean_board(char *board) {
+// Safely deallocate the given board
+void clean_board(char *&board) {
   delete[] board;
   board = nullptr;
-};
+}
 
 // Prints out the board: M for marked tiles, * for hidden tiles, otherwise 0-9
-void print_board(char *board, std::size_t x_dim, std::size_t y_dim) {
+void print_board(const char *board, std::size_t x_dim, std::size_t y_dim) {
+  if (board == nullptr) {
+    throw std::invalid_argument("Board pointer is null");
+  }
+
   std::cout << std::endl;
-  for (std::size_t y{}; y < y_dim; ++y) {
-    for (std::size_t x{}; x < x_dim; ++x) {
-      // index
-      std::size_t i{y * x_dim + x};
-      // if hidden
-      if (board[i] & 0x20) {
-        // if marked
-        std::cout << ((board[i] & 0x10) ? 'M' : '*');
-        // if revealed
+  for (std::size_t y = 0; y < y_dim; ++y) {
+    for (std::size_t x = 0; x < x_dim; ++x) {
+      std::size_t i = y * x_dim + x;
+      char cell = board[i];
+
+      if (cell & hidden_mask()) {
+        std::cout << ((cell & marked_mask()) ? 'M' : '*');
       } else {
-        // mask to get value
-        int value = board[i] & 0xF;
+        int value = cell & value_mask();
         std::cout << value;
       }
     }
@@ -41,11 +51,14 @@ void print_board(char *board, std::size_t x_dim, std::size_t y_dim) {
 
 // Hide all the field values
 void hide_board(char *board, std::size_t x_dim, std::size_t y_dim) {
-  for (std::size_t i{}; i < x_dim * y_dim; ++i) {
-    // hide all values
-    board[i] |= 0x20;
+  if (board == nullptr) {
+    throw std::invalid_argument("Board pointer is null");
   }
-};
+
+  for (std::size_t i = 0; i < x_dim * y_dim; ++i) {
+    board[i] |= hidden_mask();
+  }
+}
 
 // Player attempts to mark a field
 int mark(char *board, std::size_t x_dim, std::size_t y_dim, std::size_t x_loc, std::size_t y_loc) {
