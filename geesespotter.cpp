@@ -2,6 +2,22 @@
 #include <iostream>
 #include <stdexcept>
 
+// ANSI Color Codes
+const std::string RESET = "\033[0m";
+const std::string RED = "\033[31m";
+const std::string GREEN = "\033[32m";
+const std::string YELLOW = "\033[33m";
+const std::string BLUE = "\033[34m";
+const std::string MAGENTA = "\033[35m";
+const std::string CYAN = "\033[36m";
+const std::string WHITE = "\033[37m";
+
+// ASCII Characters for Tiles
+const char UNREVEALED_TILE = '#';
+const char EMPTY_TILE = '.';
+const char MARKED_TILE = 'M';
+const char GEESE_TILE = 'G';
+
 // Create the board and initialize it
 char *create_board(std::size_t x_dim, std::size_t y_dim) {
   if (x_dim == 0 || y_dim == 0) {
@@ -25,23 +41,32 @@ void clean_board(char *&board) {
   board = nullptr;
 }
 
-// Prints out the board: M for marked tiles, * for hidden tiles, otherwise 0-9
+// Prints out the board
 void print_board(const char *board, std::size_t x_dim, std::size_t y_dim) {
   if (board == nullptr) {
     throw std::invalid_argument("Board pointer is null");
   }
 
+  // Print column headers
+  std::cout << "  ";
+  for (std::size_t x = 0; x < x_dim; ++x) {
+    std::cout << x << " ";
+  }
+
   std::cout << std::endl;
   for (std::size_t y = 0; y < y_dim; ++y) {
+    // Print row header
+    std::cout << y << " ";
     for (std::size_t x = 0; x < x_dim; ++x) {
       std::size_t i = y * x_dim + x;
       char cell = board[i];
 
       if (cell & hidden_mask()) {
-        std::cout << ((cell & marked_mask()) ? 'M' : '*');
+        std::cout << ((cell & marked_mask()) ? BLUE + MARKED_TILE + RESET : std::string(1, UNREVEALED_TILE)) << " ";
       } else {
         int value = cell & value_mask();
-        std::cout << value;
+        std::string color = (value == 9) ? RED : GREEN;
+        std::cout << color << (value ? std::to_string(value) : std::string(1, EMPTY_TILE)) << RESET << " ";
       }
     }
     std::cout << std::endl;

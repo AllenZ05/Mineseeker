@@ -126,7 +126,7 @@ void action_show(char *&board, std::size_t &x_dim, std::size_t &y_dim, unsigned 
   std::cin >> x_reveal;
   std::cout << "Please enter the y location to show: ";
   std::cin >> y_reveal;
-
+  std::cout << std::endl;
   if (x_reveal >= x_dim || y_reveal >= y_dim) {
     std::cout << "Location entered is not on the board." << std::endl;
   } else if (board[x_dim * y_reveal + x_reveal] & marked_mask()) {
