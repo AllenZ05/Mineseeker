@@ -7,10 +7,16 @@
 #include <random>
 #include <string>
 
+const std::string RESET = "\033[0m";
+const std::string BLUE = "\033[34m";
+const std::string YELLOW = "\033[33m";
+const std::string RED = "\033[31m";
+const std::string GREEN = "\033[32m";
+
 int main() {
   std::srand(static_cast<unsigned int>(std::time(nullptr)));
   if (!game()) {
-    std::cerr << "An error occurred during the game." << std::endl;
+    std::cerr << YELLOW << "An error occurred during the game." << RESET << std::endl;
   }
   return 0;
 }
@@ -34,7 +40,7 @@ bool game() {
       action_mark(game_board, x_dim, y_dim);
       break;
     case 'R':
-      std::cout << "Restarting the game." << std::endl;
+      std::cout << BLUE << "Restarting the game." << RESET << std::endl;
       if (!start_game(game_board, x_dim, y_dim, num_geese)) {
         return false;
       }
@@ -43,7 +49,7 @@ bool game() {
     print_board(game_board, x_dim, y_dim);
 
     if (is_game_won(game_board, x_dim, y_dim)) {
-      std::cout << "Congratulations! You won!" << std::endl;
+      std::cout << GREEN << "Congratulations! You won!" << RESET << std::endl;
       if (!start_game(game_board, x_dim, y_dim, num_geese)) {
         return false;
       }
@@ -57,13 +63,13 @@ bool game() {
 bool start_game(char *&board, std::size_t &x_dim, std::size_t &y_dim, unsigned int &num_geese) {
   std::cout << std::endl;
   std::cout << "-------------------------------------------\n";
-  std::cout << "Welcome to GeeseSpotter!\n\n";
+  std::cout << BLUE << "Welcome to GeeseSpotter!\n\n" << RESET;
   x_dim = get_dimension_input("x");
   y_dim = get_dimension_input("y");
 
   num_geese = get_geese_input(x_dim, y_dim);
 
-  clean_board(board); // Safe to call on nullptr
+  clean_board(board);
   board = create_board(x_dim, y_dim);
   spread_geese(board, x_dim, y_dim, num_geese);
   compute_neighbours(board, x_dim, y_dim);
@@ -99,7 +105,7 @@ unsigned int get_geese_input(std::size_t x_dim, std::size_t y_dim) {
     if (std::cin.fail() || num_geese > x_dim * y_dim) {
       std::cin.clear();
       std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      std::cerr << "Invalid input. Please enter a valid number of geese.\n";
+      std::cerr << YELLOW << "\nInvalid input. Please enter a valid number of geese.\n\n" << RESET;
     } else {
       break;
     }
@@ -129,14 +135,14 @@ void action_show(char *&board, std::size_t &x_dim, std::size_t &y_dim, unsigned 
   std::cin >> y_reveal;
   std::cout << std::endl;
   if (x_reveal >= x_dim || y_reveal >= y_dim) {
-    std::cout << "Location entered is not on the board." << std::endl;
+    std::cout << YELLOW << "Location entered is not on the board.\n" << RESET << std::endl;
   } else if (board[x_dim * y_reveal + x_reveal] & marked_mask()) {
-    std::cout << "Location is marked, and therefore cannot be revealed." << std::endl;
-    std::cout << "Use Mark on location to unmark." << std::endl;
+    std::cout << YELLOW << "Location is marked, and therefore cannot be revealed." << RESET << std::endl;
+    std::cout << YELLOW << "Use Mark on location to unmark.\n" << RESET << std::endl;
   } else if (reveal(board, x_dim, y_dim, x_reveal, y_reveal) == 9) {
-    std::cout << "You disturbed a goose! Your game has ended." << std::endl;
+    std::cout << RED << "You disturbed a goose! Your game has ended." << RESET << std::endl;
     print_board(board, x_dim, y_dim);
-    std::cout << "Starting a new game." << std::endl;
+    std::cout << BLUE << "Starting a new game." << RESET << std::endl;
     start_game(board, x_dim, y_dim, num_geese);
   }
 
@@ -152,9 +158,9 @@ void action_mark(char *board, std::size_t x_dim, std::size_t y_dim) {
   std::cin >> y_mark;
 
   if (x_mark >= x_dim || y_mark >= y_dim) {
-    std::cout << "Location entered is not on the board." << std::endl;
+    std::cout << YELLOW << "\nLocation entered is not on the board.\n" << RESET << std::endl;
   } else if (mark(board, x_dim, y_dim, x_mark, y_mark) == 2) {
-    std::cout << "Position already revealed, so cannot be marked." << std::endl;
+    std::cout << YELLOW << "\nPosition already revealed, so cannot be marked.\n" << RESET << std::endl;
   }
   return;
 }

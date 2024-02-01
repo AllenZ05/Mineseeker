@@ -6,11 +6,7 @@
 const std::string RESET = "\033[0m";
 const std::string RED = "\033[31m";
 const std::string GREEN = "\033[32m";
-const std::string YELLOW = "\033[33m";
-const std::string BLUE = "\033[34m";
-const std::string MAGENTA = "\033[35m";
-const std::string CYAN = "\033[36m";
-const std::string WHITE = "\033[37m";
+const std::string LIGHT_BLUE = "\033[36m";
 
 // ASCII Characters for Tiles
 const char UNREVEALED_TILE = '#';
@@ -48,6 +44,7 @@ void print_board(const char *board, std::size_t x_dim, std::size_t y_dim) {
   }
 
   // Print column headers
+  std::cout << std::endl;
   std::cout << "   ";
   for (std::size_t x = 0; x < x_dim; ++x) {
     std::cout << x << " ";
@@ -62,7 +59,7 @@ void print_board(const char *board, std::size_t x_dim, std::size_t y_dim) {
       char cell = board[i];
 
       if (cell & hidden_mask()) {
-        std::cout << ((cell & marked_mask()) ? BLUE + MARKED_TILE + RESET : std::string(1, UNREVEALED_TILE)) << " ";
+        std::cout << ((cell & marked_mask()) ? LIGHT_BLUE + MARKED_TILE + RESET : std::string(1, UNREVEALED_TILE)) << " ";
       } else {
         int value = cell & value_mask();
         std::string color = (value == 9) ? RED : GREEN;
