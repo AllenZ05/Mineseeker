@@ -22,7 +22,7 @@ It asks the user to enter the number of rows, columns, and geese on the board. T
 ## Getting Started
 
 - **Clone** the repository
-- **Compile** the code: `g++ -std=c++20  geesespotter.cpp geesespotter_lib.cpp -o main` 
+- **Compile** the code: `g++ -std=c++20 geesespotter.cpp geesespotter_lib.cpp -o main` 
 - **Start** the game: `./main` 
 
 ## Video Demo
