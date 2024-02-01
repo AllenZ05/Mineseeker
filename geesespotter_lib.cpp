@@ -55,8 +55,9 @@ bool game() {
 }
 
 bool start_game(char *&board, std::size_t &x_dim, std::size_t &y_dim, unsigned int &num_geese) {
+  std::cout << std::endl;
   std::cout << "-------------------------------------------\n";
-  std::cout << "Welcome to GeeseSpotter!\n";
+  std::cout << "Welcome to GeeseSpotter!\n\n";
   x_dim = get_dimension_input("x");
   y_dim = get_dimension_input("y");
 
@@ -109,7 +110,7 @@ unsigned int get_geese_input(std::size_t x_dim, std::size_t y_dim) {
 char get_action() {
   char action{0};
 
-  std::cout << "Please enter the action ([S]how, [M]ark, [R]estart, [Q]uit): ";
+  std::cout << "\nPlease enter the action ([S]how, [M]ark, [R]estart, [Q]uit): ";
   std::cin >> action;
 
   if (islower(action)) {

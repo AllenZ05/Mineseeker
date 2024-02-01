@@ -48,7 +48,7 @@ void print_board(const char *board, std::size_t x_dim, std::size_t y_dim) {
   }
 
   // Print column headers
-  std::cout << "  ";
+  std::cout << "   ";
   for (std::size_t x = 0; x < x_dim; ++x) {
     std::cout << x << " ";
   }
@@ -56,7 +56,7 @@ void print_board(const char *board, std::size_t x_dim, std::size_t y_dim) {
   std::cout << std::endl;
   for (std::size_t y = 0; y < y_dim; ++y) {
     // Print row header
-    std::cout << y << " ";
+    std::cout << y << "  ";
     for (std::size_t x = 0; x < x_dim; ++x) {
       std::size_t i = y * x_dim + x;
       char cell = board[i];
