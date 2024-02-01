@@ -14,3 +14,5 @@ It asks the user to enter the number of rows, columns, and geese on the board. T
 - C++ 
 
 ## Video Demo
+
+https://github.com/AllenZ05/Minesweeper/assets/124856383/08858cc9-1799-4653-a58b-e5750406ee09
