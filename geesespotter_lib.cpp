@@ -88,7 +88,7 @@ std::size_t get_dimension_input(const std::string &dimension_name) {
     if (std::cin.fail() || dimension < 1 || dimension > ((dimension_name == "x") ? x_dim_max() : y_dim_max())) {
       std::cin.clear();
       std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      std::cerr << "Invalid input. Please enter a number between 1 and " << ((dimension_name == "x") ? x_dim_max() : y_dim_max()) << ".\n";
+      std::cerr << YELLOW << "\nInvalid input. Please enter a number between 1 and " << ((dimension_name == "x") ? x_dim_max() : y_dim_max()) << ".\n\n" << RESET;
     } else {
       break;
     }
